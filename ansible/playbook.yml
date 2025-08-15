@@ -1,0 +1,17 @@
+- name: Prepare all nodes
+  hosts: all
+  gather_facts: false
+  roles:
+    - common
+
+- name: Install K3s control plane
+  hosts: controlplane
+  gather_facts: true
+  roles:
+    - k3s_control_plane
+
+- name: Install K3s agents
+  hosts: worker
+  gather_facts: true
+  roles:
+    - k3s_agent

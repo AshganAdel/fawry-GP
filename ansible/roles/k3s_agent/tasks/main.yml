@@ -1,0 +1,4 @@
+- name: Install K3s agent
+  become: true
+  shell: |
+    curl -sfL https://get.k3s.io | K3S_URL="https://{{ hostvars['controlplane-node'].ansible_host }}:6443" K3S_TOKEN="{{ hostvars['controlplane-node'].k3s_token }}" sh -

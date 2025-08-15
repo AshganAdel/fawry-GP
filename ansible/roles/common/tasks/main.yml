@@ -1,0 +1,5 @@
+- name: Update and install dependencies
+  become: true
+  package:
+    name: curl
+    state: present

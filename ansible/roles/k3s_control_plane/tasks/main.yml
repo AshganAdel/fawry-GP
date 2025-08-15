@@ -1,0 +1,20 @@
+- name: Install K3s server
+  become: true
+  shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --tls-san 35.92.160.1" sh - 
+
+- name: Fetch node token
+  become: true
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_token_raw
+
+- name: Set node token fact
+  set_fact:
+    k3s_token: "{{ k3s_token_raw.content | b64decode | trim }}"
+
+- name: Debug token
+  debug:
+    var: k3s_token
+
+    
