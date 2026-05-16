@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+  db:
+    image: mohamedtarek5/sqlapp:latest
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bucketlist
+      MYSQL_USER: flaskuser
+      MYSQL_PASSWORD: flaskpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  flask:
+    image: mohamedtarek5/myflaskapp:latest
+    container_name: flask_app
+    restart: always
+    ports:
+      - "5002:5002"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "mysql+pymysql://flaskuser:flaskpass@db:3306/bucketlist"
+
+volumes:
+  db_data:

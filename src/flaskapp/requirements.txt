@@ -1,0 +1,8 @@
+flask
+mysql-connector
+flask-mysql
+mysql
+cryptography
+pytest
+coverage
+pytest-cov

@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-test
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/mohdtarek5/K8s-project.git
+    targetRevision: main 
+    path: K8s/overlays/testing
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/mohdtarek5/K8s-project.git
+    targetRevision: main 
+    path: K8s/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prod
+  syncPolicy: {}
+

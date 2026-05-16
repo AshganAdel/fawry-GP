@@ -1,0 +1,127 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+      changes:
+        - src/**/*
+        - .gitlab-ci.yml
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - when: never   
+stages:
+  - test
+  - lint
+  - sast
+  - dependencyscan
+  - build
+  - update
+
+# ----------- TEST STAGE -----------
+test:
+  stage: test
+  image: python:3.9
+  before_script:
+    - pip install -r src/flaskapp/requirements.txt
+    - pip install pytest pytest-cov
+  script:
+    - cd src
+    - pytest --maxfail=1 --disable-warnings -q --cov=flaskapp --cov-report=xml:coverage.xml -k "not test_add_wish"
+
+# ----------- LINT STAGE -----------
+lint:
+  stage: lint
+  image: python:3.9
+  before_script:
+    - pip install -r src/flaskapp/requirements.txt
+    - pip install flake8
+  script:
+    - cd src
+    - flake8 . --exit-zero
+
+# ----------- SAST STAGE -----------
+sast:
+  stage: sast
+  image: python:3.9
+  script:
+    - cd src
+    - pip install bandit
+    - bandit -r . || true 
+  allow_failure: true
+
+
+# -----------Dependency-scan STAGE -----------
+dependency-scan:
+  stage: dependencyscan
+  image: python:3.9
+  cache:
+    policy: pull
+  script:
+    - cd src
+    - pip install --no-cache-dir -r flaskapp/requirements.txt
+    - pip install safety
+    - safety check --full-report || true
+  allow_failure: true
+
+
+# ----------- BUILD & PUSH STAGE -----------
+docker-build-push:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind 
+  variables:
+    DOCKER_HOST: tcp://docker:2375 
+    DOCKER_TLS_CERTDIR: "" 
+  before_script:
+    - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+  script:
+    - cd src
+    - docker build -t $DOCKERHUB_USERNAME/myflaskapp:$CI_PIPELINE_IID -f flaskapp/Dockerfile flaskapp/
+    - docker push $DOCKERHUB_USERNAME/myflaskapp:$CI_PIPELINE_IID
+
+# ----------- update STAGE -----------
+update-manifests-testing:
+  stage: update
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache git bash curl
+    - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+    - mv kustomize /usr/local/bin/
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "gitlab"
+  script:
+      - |
+        BRANCH="$CI_COMMIT_REF_NAME"
+        OVERLAY_PATH="K8s/overlays/testing"
+        rm -rf  K8s-project
+        git clone https://oauth2:${access_token_variable}@gitlab.com/mohdtarek5/K8s-project.git
+        cd K8s-project/$OVERLAY_PATH
+
+        kustomize edit set image $DOCKERHUB_USERNAME/myflaskapp:$CI_PIPELINE_IID
+        git add .
+        git commit -m "Update image to $APP_VERSION in $OVERLAY_PATH via GitLab CI" || echo "No changes to commit"
+        git push origin $BRANCH
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "testing"'
+
+update-manifests-prod:
+  stage: update
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache git bash curl
+    - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+    - mv kustomize /usr/local/bin/
+    - git config --global user.email "ci@gitlab.local"
+    - git config --global user.name "gitlab"
+  script:
+      - |
+        BRANCH="$CI_COMMIT_REF_NAME"
+        OVERLAY_PATH="K8s/overlays/production"
+        rm -rf  K8s-project
+        git clone https://oauth2:${access_token_variable}@gitlab.com/mohdtarek5/K8s-project.git
+        cd K8s-project/$OVERLAY_PATH
+        kustomize edit set image $DOCKERHUB_USERNAME/myflaskapp:$CI_PIPELINE_IID
+        git add .
+        git commit -m "Update image to $APP_VERSION in $OVERLAY_PATH via GitLab CI" || echo "No changes to commit"
+        git push origin $BRANCH
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "main"'
+

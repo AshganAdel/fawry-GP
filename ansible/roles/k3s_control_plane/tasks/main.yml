@@ -1,7 +1,7 @@
 - name: Install K3s server
   become: true
   shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --tls-san 35.92.160.1" sh - 
+    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--write-kubeconfig-mode 644 --tls-san --disable=traefik 35.92.160.1" sh - 
 
 - name: Fetch node token
   become: true

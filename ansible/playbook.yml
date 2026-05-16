@@ -15,3 +15,16 @@
   gather_facts: true
   roles:
     - k3s_agent
+
+- name: Install Nginx Ingress
+  hosts: controlplane
+  roles:
+    - install_nginx_ingress
+
+- name: Install Argocd
+  vars_files:
+    - secrets.yml
+  hosts: controlplane
+  roles:
+    - argocd
+  

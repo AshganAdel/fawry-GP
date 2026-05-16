@@ -1,15 +1,15 @@
 all:
   hosts:
     controlplane-node:
-      ansible_host: 10.0.2.233
-      ansible_ssh_private_key_file: ~/.ssh/ec2_key.pem  # Key for private EC2
+      ansible_host: 10.0.2.253
+      ansible_ssh_private_key_file: ~/.ssh/ec2_key.pem  
       ansible_ssh_common_args: >
-        -o ProxyCommand="ssh -i ~/.ssh/ec2_key.pem -W %h:%p ubuntu@35.92.226.177"
+        -o ProxyCommand="ssh -i ~/.ssh/ec2_key.pem -W %h:%p ubuntu@54.70.254.236"
     worker-node:
-      ansible_host: 10.0.2.160
-      ansible_ssh_private_key_file: ~/.ssh/ec2_key.pem  # Key for private EC2
+      ansible_host: 10.0.2.197
+      ansible_ssh_private_key_file: ~/.ssh/ec2_key.pem  
       ansible_ssh_common_args: >
-        -o ProxyCommand="ssh -i ~/.ssh/ec2_key.pem -W %h:%p ubuntu@35.92.226.177"
+        -o ProxyCommand="ssh -i ~/.ssh/ec2_key.pem -W %h:%p ubuntu@54.70.254.236"
 
   children:
     controlplane:

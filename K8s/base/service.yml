@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  selector:
+    app: mysql-db
+  type: ClusterIP
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+spec:
+  selector:
+    app: flask-app
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 5002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flaskapp-svc
+spec:
+  selector:
+    app: flask-app
+  type: NodePort
+  ports:
+  - name: http
+    protocol: TCP
+    port: 5000
+    targetPort: 5002
+    nodePort: 30200
+  sessionAffinity: None

@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    spec:
+      containers:
+      - name: flask-container
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
